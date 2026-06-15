@@ -1,0 +1,168 @@
+/* 给 Lisa 看：日常碎片悬浮按钮 */
+.lisa-daily-float-btn {
+  position: fixed;
+  right: 18px;
+  bottom: 86px;
+  z-index: 9998;
+  min-width: 118px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(122, 86, 55, 0.92);
+  color: #fff8ef;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 24px rgba(70, 40, 20, 0.25);
+  cursor: pointer;
+}
+
+/* 面板遮罩 */
+.lisa-daily-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(34, 24, 18, 0.38);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.lisa-daily-overlay.show {
+  display: flex;
+}
+
+/* 主面板 */
+.lisa-daily-panel {
+  width: min(92vw, 420px);
+  max-height: 86vh;
+  overflow-y: auto;
+  border-radius: 24px;
+  padding: 18px;
+  background: rgba(255, 248, 239, 0.96);
+  box-shadow: 0 18px 48px rgba(60, 36, 20, 0.28);
+  color: #4b3021;
+  font-family: inherit;
+}
+
+.lisa-daily-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.lisa-daily-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.lisa-daily-close {
+  border: none;
+  background: transparent;
+  color: #6a452e;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.lisa-daily-textarea {
+  width: 100%;
+  min-height: 96px;
+  box-sizing: border-box;
+  border: 1px solid rgba(110, 72, 45, 0.24);
+  border-radius: 16px;
+  padding: 12px;
+  resize: vertical;
+  background: rgba(255, 255, 255, 0.78);
+  color: #4b3021;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.lisa-daily-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.lisa-daily-upload,
+.lisa-daily-send,
+.lisa-daily-clear {
+  border: none;
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: #7a5637;
+  color: #fff8ef;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.lisa-daily-clear {
+  background: rgba(122, 86, 55, 0.2);
+  color: #5b3a24;
+}
+
+.lisa-daily-preview img,
+.lisa-daily-history-img {
+  width: 100%;
+  border-radius: 16px;
+  margin-top: 10px;
+  display: block;
+}
+
+.lisa-daily-response {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(242, 222, 202, 0.62);
+}
+
+.lisa-daily-subtitle {
+  font-size: 13px;
+  color: #7c5b41;
+  margin-bottom: 8px;
+}
+
+.lisa-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lisa-card-chip {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #f5e3d0;
+  border: 1px solid rgba(113, 76, 48, 0.18);
+  color: #533522;
+  font-size: 13px;
+}
+
+.lisa-daily-history {
+  margin-top: 16px;
+}
+
+.lisa-daily-history-item {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(113, 76, 48, 0.12);
+}
+
+.lisa-daily-time {
+  font-size: 11px;
+  color: #92715a;
+  margin-bottom: 6px;
+}
+
+.lisa-daily-user-text {
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
