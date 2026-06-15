@@ -581,3 +581,48 @@
     createDailyCardsUI();
   }
 })();
+.lisa-daily-options {
+  margin-top: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.lisa-daily-option {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  color: #7c5b41;
+}
+
+.lisa-daily-option select {
+  width: 100%;
+  border: 1px solid rgba(110, 72, 45, 0.22);
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #4b3021;
+  font-size: 13px;
+}
+
+.lisa-daily-status {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.lisa-daily-status.pending {
+  background: rgba(122, 86, 55, 0.12);
+  color: #6a452e;
+}
+
+.lisa-daily-status.silent {
+  background: rgba(120, 120, 120, 0.12);
+  color: #666;
+}
+
+.lisa-daily-status.replied {
+  background: rgba(122, 86, 55, 0.16);
+  color: #5b3a24;
+}
