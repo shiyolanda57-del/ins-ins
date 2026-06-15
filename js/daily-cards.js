@@ -1,5 +1,5 @@
 (function () {
-  const STORAGE_KEY = "lisa_daily_card_records_v2";
+  const STORAGE_KEY = "lisa_daily_card_records_v3";
   let selectedImageBase64 = "";
 
   function randomInt(min, max) {
@@ -33,10 +33,10 @@
 
     try {
       if (
-        typeof customReplyGroups !== "undefined" &&
-        Array.isArray(customReplyGroups)
+        typeof window.customReplyGroups !== "undefined" &&
+        Array.isArray(window.customReplyGroups)
       ) {
-        customReplyGroups.forEach(group => {
+        window.customReplyGroups.forEach(group => {
           if (!group || !group.disabled) return;
           if (!Array.isArray(group.items)) return;
 
@@ -56,7 +56,9 @@
     let pool = [];
 
     try {
-      if (typeof customReplies !== "undefined" && Array.isArray(customReplies)) {
+      if (typeof window.customReplies !== "undefined" && Array.isArray(window.customReplies)) {
+        pool = window.customReplies;
+      } else if (typeof customReplies !== "undefined" && Array.isArray(customReplies)) {
         pool = customReplies;
       }
     } catch (e) {
@@ -73,19 +75,41 @@
       .filter(card => !disabledGroupItems.has(card));
   }
 
-  function drawLisaCards() {
-    const pool = getOriginalReplyCards();
+  function getReplyCount() {
+    // 保留你之前的设定：1-4 张，且 n 随机，5 以下。
+    return randomInt(1, 4);
 
-    if (!pool.length) {
-      alert("还没有可用字卡。请先去原网站的「高级功能 → 自定义回复」里添加字卡，或检查是否把字卡都屏蔽了。");
-      return [];
-    }
+    // 如果你之后想完全复刻原网站数量逻辑，把上面一行删掉，换成下面这一行：
+    // return Math.random() < 0.75 ? 1 : (Math.random() < 0.95 ? 2 : 3);
+  }
 
-    const max = Math.min(4, pool.length);
-    const count = randomInt(1, max);
+  function getReplyDelay() {
+    const fallbackMin = 800;
+    const fallbackMax = 2200;
 
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
+    const min =
+      typeof window.settings !== "undefined" && Number.isFinite(Number(window.settings.replyDelayMin))
+        ? Number(window.settings.replyDelayMin)
+        : typeof settings !== "undefined" && Number.isFinite(Number(settings.replyDelayMin))
+          ? Number(settings.replyDelayMin)
+          : fallbackMin;
+
+    const max =
+      typeof window.settings !== "undefined" && Number.isFinite(Number(window.settings.replyDelayMax))
+        ? Number(window.settings.replyDelayMax)
+        : typeof settings !== "undefined" && Number.isFinite(Number(settings.replyDelayMax))
+          ? Number(settings.replyDelayMax)
+          : fallbackMax;
+
+    const safeMin = Math.max(0, Math.min(min, max));
+    const safeMax = Math.max(safeMin, Math.max(min, max));
+
+    return safeMin + Math.random() * (safeMax - safeMin);
+  }
+
+  function drawOneCard(pool) {
+    if (!pool.length) return "";
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   function getRecords() {
@@ -113,6 +137,13 @@
       .join("");
   }
 
+  function createCardChip(text) {
+    const card = document.createElement("span");
+    card.className = "lisa-card-chip lisa-card-chip-appear";
+    card.textContent = text;
+    return card;
+  }
+
   function createDailyCardsUI() {
     const floatBtn = document.createElement("button");
     floatBtn.className = "lisa-daily-float-btn";
@@ -129,26 +160,42 @@
           <button class="lisa-daily-close" type="button">×</button>
         </div>
 
-        <textarea class="lisa-daily-textarea" id="lisaDailyText" placeholder="写一点碎碎念，或者把今天发生的事放在这里……"></textarea>
-
-        <div class="lisa-daily-actions">
-          <label class="lisa-daily-upload">
-            上传图片
-            <input id="lisaDailyImage" type="file" accept="image/*" hidden>
-          </label>
-          <button class="lisa-daily-send" id="lisaDailySend" type="button">发送给 Lisa</button>
-          <button class="lisa-daily-clear" id="lisaDailyClear" type="button">清空记录</button>
+        <div class="lisa-daily-tabs">
+          <button class="lisa-daily-tab active" data-tab="send" type="button">发送碎片</button>
+          <button class="lisa-daily-tab" data-tab="board" type="button">碎片板</button>
         </div>
 
-        <div class="lisa-daily-preview" id="lisaDailyPreview"></div>
+        <div class="lisa-daily-tab-panel active" id="lisaDailySendPanel">
+          <textarea class="lisa-daily-textarea" id="lisaDailyText" placeholder="写一点碎碎念，或者把今天发生的事放在这里……"></textarea>
 
-        <div class="lisa-daily-response">
-          <div class="lisa-daily-subtitle">Lisa 从原字卡库抽到</div>
-          <div class="lisa-card-row" id="lisaDailyCurrentCards"></div>
+          <div class="lisa-daily-actions">
+            <label class="lisa-daily-upload">
+              上传图片
+              <input id="lisaDailyImage" type="file" accept="image/*" hidden>
+            </label>
+            <button class="lisa-daily-send" id="lisaDailySend" type="button">发送给 Lisa</button>
+          </div>
+
+          <div class="lisa-daily-preview" id="lisaDailyPreview"></div>
+
+          <div class="lisa-daily-response">
+            <div class="lisa-daily-subtitle">Lisa 的回应</div>
+            <div class="lisa-thinking" id="lisaThinking" style="display:none;">
+              <span class="lisa-thinking-dot"></span>
+              <span class="lisa-thinking-text">Lisa 正在想……</span>
+            </div>
+            <div class="lisa-card-row" id="lisaDailyCurrentCards"></div>
+          </div>
         </div>
 
-        <div class="lisa-daily-history">
-          <div class="lisa-daily-subtitle">以前留下的碎片</div>
+        <div class="lisa-daily-tab-panel" id="lisaDailyBoardPanel">
+          <div class="lisa-daily-board-head">
+            <div>
+              <div class="lisa-daily-subtitle">碎片板</div>
+              <div class="lisa-daily-time">这里会保存你发过的图片、文字和 Lisa 抽到的字卡。</div>
+            </div>
+            <button class="lisa-daily-clear" id="lisaDailyClear" type="button">清空</button>
+          </div>
           <div id="lisaDailyHistory"></div>
         </div>
       </div>
@@ -158,13 +205,37 @@
     document.body.appendChild(overlay);
 
     const closeBtn = overlay.querySelector(".lisa-daily-close");
+    const tabs = overlay.querySelectorAll(".lisa-daily-tab");
+    const sendPanel = overlay.querySelector("#lisaDailySendPanel");
+    const boardPanel = overlay.querySelector("#lisaDailyBoardPanel");
+
     const textInput = overlay.querySelector("#lisaDailyText");
     const imageInput = overlay.querySelector("#lisaDailyImage");
     const preview = overlay.querySelector("#lisaDailyPreview");
     const sendBtn = overlay.querySelector("#lisaDailySend");
     const clearBtn = overlay.querySelector("#lisaDailyClear");
     const currentCards = overlay.querySelector("#lisaDailyCurrentCards");
+    const thinking = overlay.querySelector("#lisaThinking");
     const historyBox = overlay.querySelector("#lisaDailyHistory");
+
+    let isReplying = false;
+
+    function switchTab(tabName) {
+      tabs.forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.tab === tabName);
+      });
+
+      sendPanel.classList.toggle("active", tabName === "send");
+      boardPanel.classList.toggle("active", tabName === "board");
+
+      if (tabName === "board") {
+        renderHistory(historyBox);
+      }
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+    });
 
     floatBtn.addEventListener("click", () => {
       overlay.classList.add("show");
@@ -198,6 +269,8 @@
     });
 
     sendBtn.addEventListener("click", () => {
+      if (isReplying) return;
+
       const text = textInput.value.trim();
 
       if (!text && !selectedImageBase64) {
@@ -205,29 +278,76 @@
         return;
       }
 
-      const cards = drawLisaCards();
-      if (!cards.length) return;
+      const pool = getOriginalReplyCards();
 
-      currentCards.innerHTML = cardsHTML(cards);
+      if (!pool.length) {
+        alert("还没有可用字卡。请先去原网站的「高级功能 → 自定义回复」里添加字卡，或检查是否把字卡都屏蔽了。");
+        return;
+      }
 
-      const newRecord = {
-        id: Date.now(),
-        createdAt: new Date().toLocaleString("zh-CN"),
-        text,
-        image: selectedImageBase64,
-        cards
-      };
+      isReplying = true;
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Lisa 正在看";
+      currentCards.innerHTML = "";
+      thinking.style.display = "flex";
 
-      const records = getRecords();
-      records.unshift(newRecord);
-      saveRecords(records);
+      const replyCount = Math.min(getReplyCount(), pool.length);
+      const selectedCards = [];
+      const used = new Set();
 
-      textInput.value = "";
-      imageInput.value = "";
-      selectedImageBase64 = "";
-      preview.innerHTML = "";
+      let totalDelay = 0;
 
-      renderHistory(historyBox);
+      for (let i = 0; i < replyCount; i++) {
+        totalDelay += getReplyDelay();
+
+        setTimeout(() => {
+          let picked = "";
+
+          for (let t = 0; t < 8; t++) {
+            const candidate = drawOneCard(pool);
+            if (candidate && !used.has(candidate)) {
+              picked = candidate;
+              break;
+            }
+          }
+
+          if (!picked) {
+            picked = drawOneCard(pool);
+          }
+
+          if (picked) {
+            used.add(picked);
+            selectedCards.push(picked);
+            currentCards.appendChild(createCardChip(picked));
+          }
+
+          if (i === replyCount - 1) {
+            thinking.style.display = "none";
+
+            const newRecord = {
+              id: Date.now(),
+              createdAt: new Date().toLocaleString("zh-CN"),
+              text,
+              image: selectedImageBase64,
+              cards: selectedCards
+            };
+
+            const records = getRecords();
+            records.unshift(newRecord);
+            saveRecords(records);
+            renderHistory(historyBox);
+
+            textInput.value = "";
+            imageInput.value = "";
+            selectedImageBase64 = "";
+            preview.innerHTML = "";
+
+            sendBtn.disabled = false;
+            sendBtn.textContent = "发送给 Lisa";
+            isReplying = false;
+          }
+        }, totalDelay);
+      }
     });
 
     clearBtn.addEventListener("click", () => {
